@@ -23,6 +23,12 @@
     max-width: 800px;
     margin: 0 auto;
 
+    *,
+    *::before,
+    *::after {
+        box-sizing: border-box;
+    }
+
     &__dropzone {
         position: relative;
         display: flex;
@@ -68,12 +74,13 @@
     &__icon {
         width: var(--extractor-icon-size);
         height: var(--extractor-icon-size);
-        margin-bottom: 1rem;
+        margin-bottom: 16px;
     }
 
     &__text {
         margin: 0;
         font-size: var(--extractor-font-size);
+        line-height: 1.5;
     }
 
     &__image {
@@ -82,9 +89,87 @@
         object-fit: contain;
     }
 
+    &__controls {
+        display: none;
+        width: 100%;
+        max-width: 400px;
+        margin: 16px auto 0;
+        padding: 16px;
+        background-color: var(--extractor-bg-color);
+        border-radius: var(--extractor-border-radius);
+    }
+
+    &__control-group {
+        margin-bottom: 16px;
+    }
+
+    &__label {
+        display: block;
+        margin-bottom: 8px;
+        color: var(--extractor-text-color);
+        font-size: var(--extractor-font-size);
+        line-height: 1.5;
+        font-weight: 500;
+    }
+
+    &__radius {
+        width: 100%;
+        box-sizing: border-box;
+        padding: 8px;
+        border: 1px solid var(--extractor-border-color);
+        border-radius: 4px;
+        font-size: var(--extractor-font-size);
+        line-height: 1.5;
+        color: var(--extractor-text-color);
+        background-color: white;
+        -moz-appearance: textfield;
+
+        &::-webkit-outer-spin-button,
+        &::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        &:focus {
+            outline: none;
+            border-color: var(--extractor-border-active);
+        }
+    }
+
+    &__help {
+        margin-top: 8px;
+        font-size: 0.875rem;
+        line-height: 1.5;
+        color: var(--extractor-text-color);
+        opacity: 0.8;
+    }
+
+    &__process {
+        width: 100%;
+        padding: 12px;
+        background-color: var(--extractor-border-active);
+        color: white;
+        border: none;
+        border-radius: var(--extractor-border-radius);
+        font-size: var(--extractor-font-size);
+        line-height: 1.5;
+        cursor: pointer;
+        transition: opacity var(--extractor-transition-duration) ease;
+
+        &:hover {
+            opacity: 0.9;
+        }
+
+        &:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+    }
+
     &__error {
-        margin-top: 0.5rem;
+        margin-top: 8px;
         color: var(--extractor-error-color);
         font-size: var(--extractor-font-size);
+        line-height: 1.5;
     }
 }

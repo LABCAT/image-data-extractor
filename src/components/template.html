@@ -12,5 +12,17 @@
         </div>
         <img class="image-data-extractor__image" style="display: none;">
     </div>
+    <div class="image-data-extractor__controls" style="display: none;">
+        <div class="image-data-extractor__control-group">
+            <label class="image-data-extractor__label">Sampling Radius (pixels)</label>
+            <input type="number" class="image-data-extractor__radius" min="1" max="20" value="1">
+            <div class="image-data-extractor__help">
+                The sampling radius determines the grid size for pixel sampling.
+                A radius of 4 means we'll sample every 4th pixel in both directions.
+                Smaller values give more detail but produce larger output files.
+            </div>
+        </div>
+        <button class="image-data-extractor__process">Process Image</button>
+    </div>
     <p class="image-data-extractor__error"></p>
 </div>

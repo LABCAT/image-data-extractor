@@ -6,6 +6,9 @@ class ImageDataExtractor extends HTMLElement {
     private input!: HTMLInputElement;
     private preview!: HTMLImageElement;
     private errorDisplay!: HTMLParagraphElement;
+    private controls!: HTMLDivElement;
+    private radiusInput!: HTMLInputElement;
+    private processButton!: HTMLButtonElement;
 
     constructor() {
         super();
@@ -31,6 +34,9 @@ class ImageDataExtractor extends HTMLElement {
         this.input = content.querySelector('.image-data-extractor__input')!;
         this.preview = content.querySelector('.image-data-extractor__image')!;
         this.errorDisplay = content.querySelector('.image-data-extractor__error')!;
+        this.controls = content.querySelector('.image-data-extractor__controls')!;
+        this.radiusInput = content.querySelector('.image-data-extractor__radius')!;
+        this.processButton = content.querySelector('.image-data-extractor__process')!;
 
         this.shadowRoot?.appendChild(style);
         this.shadowRoot?.appendChild(content);
@@ -42,6 +48,8 @@ class ImageDataExtractor extends HTMLElement {
         this.dropzone.addEventListener('drop', this.handleDrop.bind(this));
         this.dropzone.addEventListener('click', this.handleClick.bind(this));
         this.input.addEventListener('change', this.handleFileInput.bind(this));
+        this.processButton.addEventListener('click', this.handleProcess.bind(this));
+        this.radiusInput.addEventListener('input', this.handleRadiusChange.bind(this));
     }
 
     private handleDragOver(e: DragEvent) {
@@ -57,7 +65,6 @@ class ImageDataExtractor extends HTMLElement {
     private handleDrop(e: DragEvent) {
         e.preventDefault();
         this.dropzone.classList.remove('image-data-extractor__dropzone--active');
-
         const file = e.dataTransfer?.files[0];
         if (file) {
             this.validateAndProcessFile(file);
@@ -93,10 +100,41 @@ class ImageDataExtractor extends HTMLElement {
         return true;
     }
 
+    private handleRadiusChange(e: Event) {
+        const value = parseInt((e.target as HTMLInputElement).value);
+        if (value < 1) this.radiusInput.value = '1';
+        if (value > 20) this.radiusInput.value = '20';
+    }
+
+    private async handleProcess() {
+        const radius = parseInt(this.radiusInput.value);
+        if (isNaN(radius) || radius < 1 || radius > 20) {
+            this.showError('Please enter a valid radius between 1 and 20.');
+            return;
+        }
+
+        this.processButton.disabled = true;
+
+        try {
+            this.dispatchEvent(new CustomEvent('process-image', {
+                detail: {
+                    radius,
+                    image: this.preview.src
+                }
+            }));
+        } catch (error) {
+            this.showError('Error processing image');
+        } finally {
+            this.processButton.disabled = false;
+        }
+    }
+
     private showPreview(dataUrl: string) {
         this.preview.src = dataUrl;
         this.preview.style.display = 'block';
-        this.dropzone.querySelector('.image-data-extractor__placeholder')?.classList.add('image-data-extractor__placeholder--hidden');
+        this.controls.style.display = 'block';
+        this.dropzone.querySelector('.image-data-extractor__placeholder')
+            ?.classList.add('image-data-extractor__placeholder--hidden');
     }
 
     private showError(message: string) {
