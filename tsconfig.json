@@ -2,7 +2,7 @@
     "compilerOptions": {
         "target": "ESNext",
         "module": "ESNext",
-        "moduleResolution": "node",
+        "moduleResolution": "bundler",
         "strict": true,
         "esModuleInterop": true,
         "forceConsistentCasingInFileNames": true,
@@ -12,9 +12,10 @@
             "dom.iterable",
             "esnext"
         ],
-        "resolveJsonModule": true // Add this line
+        "resolveJsonModule": true
     },
     "include": [
-        "src/*"
-    ]
+        "src/**/*",
+        "*.d.ts"
+    ],
 }
