@@ -113,7 +113,7 @@ class ImageDataExtractor extends HTMLElement {
         this.updateProgress(0);
 
         try {
-            // Create a canvas to process the image
+            // Create canvas and load image
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d')!;
             const img = new Image();
@@ -123,38 +123,44 @@ class ImageDataExtractor extends HTMLElement {
                 img.onerror = reject;
                 img.src = this.preview.src;
             });
+
             canvas.width = img.width;
             canvas.height = img.height;
             ctx.drawImage(img, 0, 0);
 
-            const imageData: Record<string, { r: number; c: [number, number, number, number] }> = {};
-            const totalPixels = Math.ceil(img.width / radius) * Math.ceil(img.height / radius);
-            let processedPixels = 0;
+            // Create worker
+            const worker = new Worker(new URL('./worker.ts', import.meta.url), {
+                type: 'module'
+            });
 
-            // Process the image in chunks to allow UI updates
-            for (let x = radius / 2; x < img.width; x += radius) {
-                for (let y = radius / 2; y < img.height; y += radius) {
-                    const pixel = ctx.getImageData(x, y, 1, 1).data;
-                    const key = `${x},${y}`;
-                    imageData[key] = {
-                        r: radius,
-                        c: [pixel[0], pixel[1], pixel[2], pixel[3]]
-                    };
-                    processedPixels++;
-                    if (processedPixels % 100 === 0) { // Update progress every 100 pixels
-                        const progress = (processedPixels / totalPixels) * 100;
-                        this.updateProgress(progress);
-                        // Allow UI to update
-                        await new Promise(resolve => setTimeout(resolve, 0));
+            // Get image data
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+
+            // Process data using worker
+            const result = await new Promise((resolve, reject) => {
+                worker.onmessage = (e) => {
+                    const { type, data, progress } = e.data;
+
+                    if (type === 'progress') {
+                        this.updateProgress(progress!);
+                    } else if (type === 'complete') {
+                        resolve(data);
                     }
-                }
-            }
+                };
 
-            this.updateProgress(100);
+                worker.onerror = reject;
+
+                worker.postMessage({
+                    imageData,
+                    radius,
+                    width: canvas.width,
+                    height: canvas.height
+                }, [imageData.data.buffer]);
+            });
 
             // Create output data with metadata
             const outputData = {
-                imageData,
+                imageData: result,
                 metadata: {
                     width: img.width,
                     height: img.height,
@@ -162,21 +168,23 @@ class ImageDataExtractor extends HTMLElement {
                 }
             };
 
-            // Show the output section with download option
-            this.showOutput(outputData);
+            this.showOutput(outputData);  // Make sure output is fully shown
 
-            // Dispatch the completed event with the processed data
+            // Dispatch completion event
             this.dispatchEvent(new CustomEvent('process-complete', {
                 detail: outputData
             }));
 
-            // Hide progress after a short delay to show completion
+            // Hide progress and enable button
             setTimeout(() => {
                 this.progressBar.style.display = 'none';
                 this.processButton.disabled = false;
-            }, 1000);
+                // Terminate worker only after everything else is done
+                worker.terminate();
+            }, 300);
 
         } catch (error) {
+            console.error('Processing error:', error);
             this.showError('Error processing image');
             this.progressBar.style.display = 'none';
             this.processButton.disabled = false;
